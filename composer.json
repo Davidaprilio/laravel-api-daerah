@@ -1,0 +1,30 @@
+{
+    "name": "davidarl/api-daerah-indonesia",
+    "description": "Package Laravel yang menyediakan api daerah seperti provinsi,kabupaten dan kecamatan.",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "DavidArl\\ApiDaerah\\": "src/",
+            "DavidArl\\ApiDaerah\\Database\\Seeders\\": "database/seeders"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "DavidArl\\ApiDaerah\\ApiDaerahServiceProvider"
+            ]
+        }
+    },
+    "authors": [
+        {
+            "name": "Davidaprilio",
+            "email": "david1.aprilio4@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1"
+    },
+    "config": {
+        "sort-packages": true
+    }
+}
