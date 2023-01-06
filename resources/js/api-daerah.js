@@ -167,7 +167,7 @@ class ApiDaerah {
             elSelect.innerHTML = ''
             const opt = document.createElement('option')
             opt.innerText = customText || elSelect.getAttribute('placeholder') || 'Pilih Lokasi'
-            opt.disabled = false
+            opt.disabled = true
             opt.selected = true
             elSelect.appendChild(opt)
         }
