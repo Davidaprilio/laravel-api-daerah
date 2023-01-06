@@ -4,18 +4,52 @@ class ApiDaerah {
     elKecamatan
     elKabupaten
 
+    // Berikan Aku Sebuah ID, Kan Ku Buat Select Mu Berfungsi
     constructor(config = {}) {
         this.#option = {
-            baseUrl: config.baseUrl ?? window.location.origin,
-            idProvinsi: config.idProvinsi ?? 'provinsi-select',
-            idKecamatan: config.idKecamatan ?? 'kecamatan-select',
-            idKabupaten: config.idKabupaten ?? 'kabupaten-select',
-            event: config.event ?? true,
-            placeholder: config.placeholder ?? true,
+            baseUrl: config.baseUrl || window.location.origin,
+            event: config.event || true,
+            placeholder: config.placeholder || true,
+            supportSelectValue: config.supportSelectValue || false,
+
+            // bisa pakai ini untuk config singkat nya
+            idProvinsi: config.idProvinsi || 'provinsi-select', // sama dengan provinsi.id
+            idKecamatan: config.idKecamatan || 'kecamatan-select', // sama dengan kecamatan.id
+            idKabupaten: config.idKabupaten || 'kabupaten-select', // sama dengan kabupaten.id
+
+            // config advanced nya
+            provinsi: {
+                id: config.provinsi?.id || null,
+                value: config.provinsi?.value || 'id',
+                text: config.provinsi?.text || 'name',
+                selected: config.provinsi?.selected || null,
+                endpoint: config.provinsi?.endpoint || '/api/provinsi',
+            },
+            kabupaten: {
+                id: config.kabupaten?.id || null,
+                value: config.kabupaten?.value || 'id',
+                text: config.kabupaten?.text || 'name',
+                selected: config.kabupaten?.selected || null,
+                endpoint: config.kabupaten?.endpoint || '/api/kabupaten/:id',
+            },
+            kecamatan: {
+                id: config.kecamatan?.id || null,
+                value: config.kecamatan?.value || 'id',
+                text: config.kecamatan?.text || 'name',
+                selected: config.kecamatan?.selected || null,
+                endpoint: config.kecamatan?.endpoint || '/api/kecamatan/:id',
+            },
         }
-        this.elProvinsi = document.getElementById(this.#option.idProvinsi);
-        this.elKecamatan = document.getElementById(this.#option.idKecamatan);
-        this.elKabupaten = document.getElementById(this.#option.idKabupaten);        
+        
+        this.elProvinsi = document.getElementById(this.#option.provinsi.id || this.#option.idProvinsi);
+        this.elKecamatan = document.getElementById(this.#option.kecamatan.id || this.#option.idKecamatan);
+        this.elKabupaten = document.getElementById(this.#option.kabupaten.id || this.#option.idKabupaten);       
+        
+        if (this.#option.supportSelectValue) {
+            this.#option.provinsi.selected = this.#option.provinsi.selected || this.elProvinsi?.getAttribute('value') || null;
+            this.#option.kecamatan.selected = this.#option.kecamatan.selected || this.elKecamatan?.getAttribute('value') || null;
+            this.#option.kabupaten.selected = this.#option.kabupaten.selected || this.elKabupaten?.getAttribute('value') || null;
+        }
 
         if (this.#option.event) {
             this.#runEventSelect()
@@ -27,33 +61,63 @@ class ApiDaerah {
     }
 
     async getProvinsi() {
-        const listProvinsi = await this.#call('/api/provinsi')
+        const listProvinsi = await this.#call(this.#option.provinsi.endpoint)
         return listProvinsi
     }
 
     async getKabupaten(provinsiID) {
-        const listKabupaten = await this.#call(`/api/kabupaten/${provinsiID}`)
+        const listKabupaten = await this.#call(this.#option.kabupaten.endpoint.replace(':id', provinsiID))
         return listKabupaten
     }
 
     async getKecamatan(kabupatenID) {
-        const listKecamatan = await this.#call(`/api/kecamatan/${kabupatenID}`)
+        const listKecamatan = await this.#call(this.#option.kecamatan.endpoint.replace(':id', kabupatenID))
         return listKecamatan
     }
 
-    async renderProvinsi(text = 'name', useValue = 'id') {
+    async renderProvinsi(text = null, useValue = null, selected = null) {
         const listProvinsi = await this.getProvinsi()
-        this.#renderSelect(this.getSelectProvinsiElement(), listProvinsi, text, useValue)
+        const elSelect = this.getSelectProvinsiElement()
+
+        // mengisi default value dengan config
+        selected = selected || this.#option.provinsi.selected;
+        useValue = useValue || this.#option.provinsi.value;
+        text = text || this.#option.provinsi.text;
+
+        this.#renderSelect(elSelect, listProvinsi, text, useValue, selected)
+        if (selected != null) {
+            elSelect.value = selected
+        }
     }
 
-    async renderKabupaten(provinsiID, text = 'name', useValue = 'id') {
+    async renderKabupaten(provinsiID, text = null, useValue = null, selected = null) {
         const listKabupaten = await this.getKabupaten(provinsiID)
-        this.#renderSelect(this.getSelectKabupatenElement(), listKabupaten, text, useValue)
+        const elSelect = this.getSelectKabupatenElement()
+
+        // mengisi default value dengan config
+        selected = selected || this.#option.kabupaten.selected;
+        useValue = useValue || this.#option.kabupaten.value;
+        text = text || this.#option.kabupaten.text;
+
+        this.#renderSelect(elSelect, listKabupaten, text, useValue, selected)
+        if (selected != null) {
+            elSelect.value = selected
+        }
     }
 
-    async renderKecamatan(kabupatenID, text = 'name', useValue = 'id') {
+    async renderKecamatan(kabupatenID, text = null, useValue = null, selected = null) {
         const listKecamatan = await this.getKecamatan(kabupatenID)
-        this.#renderSelect(this.getSelectKecamatanElement(), listKecamatan, text, useValue)
+        const elSelect = this.getSelectKecamatanElement()
+
+        // mengisi default value dengan config
+        selected = selected || this.#option.kecamatan.selected;
+        useValue = useValue || this.#option.kecamatan.value;
+        text = text || this.#option.kecamatan.text;
+
+        this.#renderSelect(elSelect, listKecamatan, text, useValue, selected)
+        if (selected != null) {
+            elSelect.value = selected
+        }
     }
 
     getSelectProvinsiElement() {
@@ -85,7 +149,7 @@ class ApiDaerah {
         return this[`el${elementName}`]
     }
 
-    #renderSelect(elSelect, dataList, text = 'name', useValue = 'id') {
+    #renderSelect(elSelect, dataList, text = 'name', useValue = 'id', selected = null) {
         elSelect.innerHTML = ''
         this.#makePlaceholder(elSelect)
         
@@ -93,13 +157,16 @@ class ApiDaerah {
             const opt = this.#createOption(data, data[text], useValue)
             elSelect.appendChild(opt)
         })
+        if (selected !== null) {
+            elSelect.value = selected
+        }
     }
 
     #makePlaceholder(elSelect, customText = null) {
         if (this.#option.placeholder) {
             elSelect.innerHTML = ''
             const opt = document.createElement('option')
-            opt.innerText = customText ?? elSelect.getAttribute('placeholder') ?? 'Pilih Lokasi'
+            opt.innerText = customText || elSelect.getAttribute('placeholder') || 'Pilih Lokasi'
             opt.disabled = false
             opt.selected = true
             elSelect.appendChild(opt)
@@ -110,7 +177,7 @@ class ApiDaerah {
         const opt = document.createElement('option')
         opt.innerText = text
         opt.dataset.id = data.id
-        opt.value = data[useValue] ?? null
+        opt.value = data[useValue] || null
         return opt
     }
 
