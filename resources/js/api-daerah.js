@@ -151,7 +151,7 @@ class ApiDaerah {
 
     #renderSelect(elSelect, dataList, text = 'name', useValue = 'id', selected = null) {
         elSelect.innerHTML = ''
-        this.#makePlaceholder(elSelect)
+        this.makePlaceholder(elSelect)
         
         dataList.forEach(data => {
             const opt = this.#createOption(data, data[text], useValue)
@@ -162,7 +162,7 @@ class ApiDaerah {
         }
     }
 
-    #makePlaceholder(elSelect, customText = null) {
+    makePlaceholder(elSelect, customText = null) {
         if (this.#option.placeholder) {
             elSelect.innerHTML = ''
             const opt = document.createElement('option')
@@ -188,20 +188,20 @@ class ApiDaerah {
     }
 
     #runEventSelect() {
-        this.#makePlaceholder(this.getSelectProvinsiElement())
+        this.makePlaceholder(this.getSelectProvinsiElement())
         this.renderProvinsi()
-        this.#makePlaceholder(this.getSelectKabupatenElement())
-        this.#makePlaceholder(this.getSelectKecamatanElement())
+        this.makePlaceholder(this.getSelectKabupatenElement())
+        this.makePlaceholder(this.getSelectKecamatanElement())
         const apiDaerah = this
         this.elProvinsi.addEventListener('change', function() {
             const ProvinsiID = apiDaerah.getSelectedProvinsiID()
-            apiDaerah.#makePlaceholder(apiDaerah.elKabupaten, 'Memuat Kabupaten')
+            apiDaerah.makePlaceholder(apiDaerah.elKabupaten, 'Memuat Kabupaten')
             apiDaerah.renderKabupaten(ProvinsiID)
-            apiDaerah.#makePlaceholder(apiDaerah.elKecamatan)
+            apiDaerah.makePlaceholder(apiDaerah.elKecamatan)
         })
 
         this.elKabupaten.addEventListener('change', function() {
-            apiDaerah.#makePlaceholder(apiDaerah.elKecamatan, 'Memuat Kecamatan')
+            apiDaerah.makePlaceholder(apiDaerah.elKecamatan, 'Memuat Kecamatan')
             const KabupatenID = apiDaerah.getSelectedKabupatenID()
             apiDaerah.renderKecamatan(KabupatenID)
         })
