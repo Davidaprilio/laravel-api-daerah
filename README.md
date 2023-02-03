@@ -145,9 +145,8 @@ new ApiDaerah({
 })
 ```
 notes: 
-
- - pada `provinsi.selected` jika kamu isi, kamu bisa matikan `supportSelectValue=false` 
- - namun saat ingin mengatur value dalam bentuk attribute pada tag select baru kamu atur `supportSelectValue=true`
+ - saat ingin mengatur value dalam bentuk attribute pada tag select kamu dapat mengatur `supportSelectValue=true`
+ - kamu dapat mematikan select `kabupaten` dan `kecamatan` dengan megatur nilai `id: false` atau menggunakan `idKabupaten: false`, `idKecamatan: false`
 
 #### Method yang tersedia
 ```javascript
@@ -168,12 +167,10 @@ apiDaerah.getKecamatan(kabupatenID)
 */
 
 // merender option select
-// text: 'full_name', result = JAKARTA PUSAT, yang ditampilkan di option
-// useValue: 'name', result = JAKARTA, yang dijadikan value dan dikirim ke server
-// selected: 'JAKARTA', sesuai nila value yang ditetapkan jika null tidak akan ada default value
-apiDaerah.renderProvinsi(text, useValue, selected)
-apiDaerah.renderKabupaten(provinsiID, text, useValue, selected)
-apiDaerah.renderKecamatan(kabupatenID, text, useValue, selected)
+// selected: 'JAKARTA', sesuai nilai value pada option yang dirender
+apiDaerah.renderProvinsi(selected)
+apiDaerah.renderKabupaten(provinsiID, selected)
+apiDaerah.renderKecamatan(kabupatenID, selected)
 
 // mendapatkan element select
 apiDaerah.getSelectProvinsiElement()
@@ -185,10 +182,13 @@ apiDaerah.getSelectedProvinsiID()
 apiDaerah.getSelectedKecamatanID()
 apiDaerah.getSelectedKabupatenID()
 
-apiDaerah.makePlaceholder(elSelect, customText = null)
+// mumbuat placholder option
+apiDaerah.makePlaceholder(elementSelect, customText = null, disabled = true)
+// merender semua select dengan configurasi yang telah diberikan
+apiDaerah.renderAllSelect()
 ```
 
-Example Jika ingin membuat metode select sendiri 
+Contoh Jika ingin membuat metode select sendiri 
 
 ```javascript
 const apiDaerah = new ApiDaerah({event: false})
