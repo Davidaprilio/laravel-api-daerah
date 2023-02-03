@@ -39,6 +39,16 @@ class ApiDaerah {
                 selected: config.kecamatan?.selected || null,
                 endpoint: config.kecamatan?.endpoint || '/api/kecamatan/:id',
             },
+            enabled: {
+                kabupaten: config.kabupaten?.id !== false,
+                kecamatan: config.kecamatan?.id !== false
+            }
+        }
+        if (typeof this.#option.enabled.kabupaten != 'boolean') {
+            this.#option.enabled.kabupaten = config.idKabupaten !== false
+        }
+        if (typeof this.#option.enabled.kecamatan != 'boolean') {
+            this.#option.enabled.kecamatan = config.idKecamatan !== false
         }
         
         this.elProvinsi = document.getElementById(this.#option.provinsi.id || this.#option.idProvinsi);
@@ -75,49 +85,47 @@ class ApiDaerah {
         return listKecamatan
     }
 
-    async renderProvinsi(text = null, useValue = null, selected = null) {
+    async renderProvinsi(selected = null) {
         const listProvinsi = await this.getProvinsi()
         const elSelect = this.getSelectProvinsiElement()
 
-        // mengisi default value dengan config
-        selected = selected || this.#option.provinsi.selected;
-        useValue = useValue || this.#option.provinsi.value;
-        text = text || this.#option.provinsi.text;
-
-        this.#renderSelect(elSelect, listProvinsi, text, useValue, selected)
-        if (selected != null) {
-            elSelect.value = selected
-        }
+        this.#renderSelect(
+            elSelect, 
+            listProvinsi, 
+            this.#option.provinsi.text, 
+            this.#option.provinsi.value, 
+            selected
+        )
     }
 
-    async renderKabupaten(provinsiID, text = null, useValue = null, selected = null) {
+    async renderKabupaten(provinsiID = null, selected = null) {
+        // ambil langsung nilai provinsi jika null
+        provinsiID = provinsiID || this.getSelectedProvinsiID()
         const listKabupaten = await this.getKabupaten(provinsiID)
         const elSelect = this.getSelectKabupatenElement()
 
-        // mengisi default value dengan config
-        selected = selected || this.#option.kabupaten.selected;
-        useValue = useValue || this.#option.kabupaten.value;
-        text = text || this.#option.kabupaten.text;
-
-        this.#renderSelect(elSelect, listKabupaten, text, useValue, selected)
-        if (selected != null) {
-            elSelect.value = selected
-        }
+        this.#renderSelect(
+            elSelect, 
+            listKabupaten, 
+            this.#option.kabupaten.text,
+            this.#option.kabupaten.value, 
+            selected
+        )
     }
 
-    async renderKecamatan(kabupatenID, text = null, useValue = null, selected = null) {
+    async renderKecamatan(kabupatenID = null, selected = null) {
+        // ambil langsung nilai kabupaten jika null
+        kabupatenID = kabupatenID || this.getSelectedKabupatenID()
         const listKecamatan = await this.getKecamatan(kabupatenID)
         const elSelect = this.getSelectKecamatanElement()
 
-        // mengisi default value dengan config
-        selected = selected || this.#option.kecamatan.selected;
-        useValue = useValue || this.#option.kecamatan.value;
-        text = text || this.#option.kecamatan.text;
-
-        this.#renderSelect(elSelect, listKecamatan, text, useValue, selected)
-        if (selected != null) {
-            elSelect.value = selected
-        }
+        this.#renderSelect(
+            elSelect, 
+            listKecamatan, 
+            this.#option.kecamatan.text,
+            this.#option.kecamatan.value, 
+            selected
+        )
     }
 
     getSelectProvinsiElement() {
@@ -145,7 +153,14 @@ class ApiDaerah {
     }
 
     #checkExistElement(elementName) {
-        if (this[`el${elementName}`] === null) throw Error(`${elementName} Select with id="${this.#option[`el${elementName}`]}" not found`)
+        try {
+            if (this[`el${elementName}`] === null) throw Error(`${elementName} Select with id="${this[`el${elementName}`]}" not found`)
+        } catch (error) {
+            // lanjutkan throw jika element dienable
+            if(this.#option.enabled[elementName]) throw error
+
+            throw Error(`Cannot get element because element ${elementName} off/disabled`)
+        }
         return this[`el${elementName}`]
     }
 
@@ -162,12 +177,13 @@ class ApiDaerah {
         }
     }
 
-    makePlaceholder(elSelect, customText = null) {
+    makePlaceholder(elSelect, customText = null, disabled = true) {
         if (this.#option.placeholder) {
             elSelect.innerHTML = ''
             const opt = document.createElement('option')
             opt.innerText = customText || elSelect.getAttribute('placeholder') || 'Pilih Lokasi'
-            opt.disabled = true
+            opt.value = customText
+            opt.disabled = disabled
             opt.selected = true
             elSelect.appendChild(opt)
         }
@@ -187,23 +203,66 @@ class ApiDaerah {
         return json
     }
 
-    #runEventSelect() {
-        this.makePlaceholder(this.getSelectProvinsiElement())
-        this.renderProvinsi()
-        this.makePlaceholder(this.getSelectKabupatenElement())
-        this.makePlaceholder(this.getSelectKecamatanElement())
-        const apiDaerah = this
-        this.elProvinsi.addEventListener('change', function() {
-            const ProvinsiID = apiDaerah.getSelectedProvinsiID()
-            apiDaerah.makePlaceholder(apiDaerah.elKabupaten, 'Memuat Kabupaten')
-            apiDaerah.renderKabupaten(ProvinsiID)
-            apiDaerah.makePlaceholder(apiDaerah.elKecamatan)
-        })
+    async renderAllSelect() {
+        if (this.#option.enabled.kabupaten) {
+            this.makePlaceholder(
+                this.getSelectKabupatenElement(),
+                this.#option.kabupaten.selected,
+                (typeof this.#option.kabupaten.selected != 'string')
+            )
+        }
+        if (this.#option.enabled.kecamatan) {
+            this.makePlaceholder(
+                this.getSelectKecamatanElement(),
+                this.#option.kecamatan.selected,
+                (typeof this.#option.kecamatan.selected != 'string')
+            )
+        }
 
-        this.elKabupaten.addEventListener('change', function() {
-            apiDaerah.makePlaceholder(apiDaerah.elKecamatan, 'Memuat Kecamatan')
-            const KabupatenID = apiDaerah.getSelectedKabupatenID()
-            apiDaerah.renderKecamatan(KabupatenID)
-        })
+        // membuat init value awal
+        await this.renderProvinsi(this.#option.provinsi.selected)
+        console.log('Provinsi loaded')
+        if (this.#option.enabled.kabupaten && this.#option.kabupaten.selected) {
+            await this.renderKabupaten(null, this.#option.kabupaten.selected)
+            console.log('Kabupaten loaded')
+        }
+        if (this.#option.enabled.kecamatan && this.#option.kecamatan.selected) {
+            await this.renderKecamatan(null, this.#option.kecamatan.selected)
+            console.log('Kecamatan loaded')
+        }
+    }
+
+    async #runEventSelect() {
+        // create Event dan membuat placeholder awal
+        const apiDaerah = this
+        this.makePlaceholder(
+            this.getSelectProvinsiElement(),
+            this.#option.provinsi.selected
+        )
+
+        if (this.#option.enabled.kabupaten) {
+            this.elProvinsi.addEventListener('change', function() {
+                apiDaerah.makePlaceholder(apiDaerah.elKabupaten, 'Memuat Kabupaten')
+                apiDaerah.renderKabupaten()
+                apiDaerah.makePlaceholder(apiDaerah.elKecamatan)
+            })
+            this.makePlaceholder(
+                this.getSelectKabupatenElement(),
+                this.#option.kabupaten.selected
+            )
+        }
+
+        if (this.#option.enabled.kecamatan) {
+            this.elKabupaten.addEventListener('change', function() {
+                apiDaerah.makePlaceholder(apiDaerah.elKecamatan, 'Memuat Kecamatan')
+                apiDaerah.renderKecamatan()
+            })
+            this.makePlaceholder(
+                this.getSelectKecamatanElement(),
+                this.#option.kecamatan.selected
+            )
+        }
+
+        this.renderAllSelect()
     }
 }
