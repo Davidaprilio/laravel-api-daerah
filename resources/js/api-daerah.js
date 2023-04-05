@@ -9,7 +9,7 @@ class ApiDaerah {
         this.#option = {
             baseUrl: config.baseUrl || window.location.origin,
             event: config.event || true,
-            placeholder: config.placeholder || true,
+            placeholder: config.placeholder === false ? false : true,
             supportSelectValue: config.supportSelectValue || false,
 
             // bisa pakai ini untuk config singkat nya
@@ -40,8 +40,8 @@ class ApiDaerah {
                 endpoint: config.kecamatan?.endpoint || '/api/kecamatan/:id',
             },
             enabled: {
-                kabupaten: config.kabupaten?.id !== false,
-                kecamatan: config.kecamatan?.id !== false
+                kabupaten: config.enabled?.kabupaten === false ? false : true,
+                kecamatan: config.enabled?.kecamatan === false ? false : true,
             }
         }
         if (typeof this.#option.enabled.kabupaten != 'boolean') {
@@ -203,32 +203,28 @@ class ApiDaerah {
         return json
     }
 
-    async renderAllSelect() {
+    async renderAllSelect(withDefaultValue = false) {
         if (this.#option.enabled.kabupaten) {
             this.makePlaceholder(
                 this.getSelectKabupatenElement(),
-                this.#option.kabupaten.selected,
+                withDefaultValue ? this.#option.kabupaten.selected : null,
                 (typeof this.#option.kabupaten.selected != 'string')
             )
         }
         if (this.#option.enabled.kecamatan) {
             this.makePlaceholder(
                 this.getSelectKecamatanElement(),
-                this.#option.kecamatan.selected,
+                withDefaultValue ? this.#option.kecamatan.selected : null,
                 (typeof this.#option.kecamatan.selected != 'string')
             )
         }
 
-        // membuat init value awal
-        await this.renderProvinsi(this.#option.provinsi.selected)
-        console.log('Provinsi loaded')
-        if (this.#option.enabled.kabupaten && this.#option.kabupaten.selected) {
+        await this.renderProvinsi(withDefaultValue ? this.#option.provinsi.selected : null)
+        if (this.#option.enabled.kabupaten && withDefaultValue && this.#option.kabupaten.selected) {
             await this.renderKabupaten(null, this.#option.kabupaten.selected)
-            console.log('Kabupaten loaded')
         }
-        if (this.#option.enabled.kecamatan && this.#option.kecamatan.selected) {
+        if (this.#option.enabled.kecamatan && withDefaultValue && this.#option.kecamatan.selected) {
             await this.renderKecamatan(null, this.#option.kecamatan.selected)
-            console.log('Kecamatan loaded')
         }
     }
 
@@ -241,10 +237,13 @@ class ApiDaerah {
         )
 
         if (this.#option.enabled.kabupaten) {
+            const isEnabledKecamatan = this.#option.enabled.kecamatan
             this.elProvinsi.addEventListener('change', function() {
                 apiDaerah.makePlaceholder(apiDaerah.elKabupaten, 'Memuat Kabupaten')
                 apiDaerah.renderKabupaten()
-                apiDaerah.makePlaceholder(apiDaerah.elKecamatan)
+                if (isEnabledKecamatan) {
+                    apiDaerah.makePlaceholder(apiDaerah.elKecamatan)
+                }
             })
             this.makePlaceholder(
                 this.getSelectKabupatenElement(),
@@ -263,6 +262,6 @@ class ApiDaerah {
             )
         }
 
-        this.renderAllSelect()
+        this.renderAllSelect(true)
     }
 }

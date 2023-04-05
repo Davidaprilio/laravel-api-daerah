@@ -113,6 +113,30 @@ kamu bisa custom id nya
 	})
 </script>
 ```
+set value saat pertama render (on load):
+ ```html
+<select id="provinsi-select" value="JAWA TIMUR"></select>
+<select id="kabupaten-select" value="SURABAYA"></select>
+<select id="kecamatan-select" value="TAMBAKSARI"></select>
+
+...
+
+<script>
+	const apiDaerah = new ApiDaerah({
+		supportSelectValue: true, // untuk mengambil data dari attr value select
+		provinsi:  {
+			value: 'name', // key dari data json
+		},
+		kabupaten:  {
+			value: 'name',
+		},
+		kecamatan:  {
+			value: 'name',
+		},
+	})
+</script>
+ ```
+
 
 Masih ada lagi configurasinya? ada dong ini config lengkap nya dengan default value-nya juga
 ```javascript
@@ -142,11 +166,12 @@ new ApiDaerah({
 		selected: null,
 		endpoint: '/api/kecamatan/:id',
 	},
+	enabled: {
+		kabupaten: true, // mematikan fungsi select saat di set ke false
+		kecamatan: true
+	}
 })
 ```
-notes: 
- - saat ingin mengatur value dalam bentuk attribute pada tag select kamu dapat mengatur `supportSelectValue=true`
- - kamu dapat mematikan select `kabupaten` dan `kecamatan` dengan megatur nilai `id: false` atau menggunakan `idKabupaten: false`, `idKecamatan: false`
 
 #### Method yang tersedia
 ```javascript
@@ -186,6 +211,8 @@ apiDaerah.getSelectedKabupatenID()
 apiDaerah.makePlaceholder(elementSelect, customText = null, disabled = true)
 // merender semua select dengan configurasi yang telah diberikan
 apiDaerah.renderAllSelect()
+// memberikan true akan merender initial value juga 
+apiDaerah.renderAllSelect(true)
 ```
 
 Contoh Jika ingin membuat metode select sendiri 
