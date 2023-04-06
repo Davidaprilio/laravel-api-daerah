@@ -5,6 +5,9 @@ Ini adalah package laravel yang lengkap untuk mambantu mambuat layanan RestAPI n
 
 Sudah dilengkapi migration dan seeder, plus Client API nya untuk mempermudah penggunaan api di case input select
 
+> Suport Laravel 8.* - latest
+> PHP 7.1/8.*
+
  - [Instalasi](#instalasi)
  - [API Endpoint](#api-endpoint)
  - Implementasi
@@ -70,7 +73,7 @@ class Provinsi extends ModelProvinsi
 ## Api Client
 Ini bisa digunakan untuk request ke api nya atau membuat input select berfungsi
 
-publish dulu script nya
+publish dulu script nya jika ingin menggunakan secara local
 ```
 php artisan vendor:publish --provider="DavidArl\ApiDaerah\ApiDaerahServiceProvider" --tag="assets-api-daerah"
 ```
@@ -80,7 +83,17 @@ akan muncul 2 script `api-daerah.js` dan `api-daerah.min.js` pada directory `/pu
 ### Usage / Cara Penggunaan
 jangan lupa panggil script nya dulu.
 ```html
+<!-- Local - pilih salah satu -->
+<script src="{{ url('/api-daerah/js/api-daerah.js') }}"></script>
 <script src="{{ url('/api-daerah/js/api-daerah.min.js') }}"></script>
+
+... Atau ...
+
+<!-- CDN - pilih salah satu -->
+<script src="https://cdn.jsdelivr.net/gh/davidaprilio/laravel-api-daerah@1.0.2/resources/js/api-daerah.js" integrity="sha256-17F7Snb8nQ8DjvsyzvJE2kbXdFn5SXAsadAAJmZ7x0o=" crossorigin="anonymous"></script>
+
+<script src="https://cdn.jsdelivr.net/gh/davidaprilio/laravel-api-daerah@1.0.2/resources/js/api-daerah.min.js" integrity="sha256-B3+T40E+P0rxLYE0uyr+hbjS1Qh5oa7DfQkZlsJeqe4=" crossorigin="anonymous"></script>
+
 ```
 
 
