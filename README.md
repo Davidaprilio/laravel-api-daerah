@@ -93,9 +93,9 @@ jangan lupa panggil script nya dulu.
 ... Atau ...
 
 <!-- CDN - pilih salah satu -->
-<script src="https://cdn.jsdelivr.net/gh/davidaprilio/laravel-api-daerah@1.0.2/resources/js/api-daerah.js" integrity="sha256-17F7Snb8nQ8DjvsyzvJE2kbXdFn5SXAsadAAJmZ7x0o=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/gh/davidaprilio/laravel-api-daerah@1.0.4/resources/js/api-daerah.js" integrity="sha256-17F7Snb8nQ8DjvsyzvJE2kbXdFn5SXAsadAAJmZ7x0o=" crossorigin="anonymous"></script>
 
-<script src="https://cdn.jsdelivr.net/gh/davidaprilio/laravel-api-daerah@1.0.2/resources/js/api-daerah.min.js" integrity="sha256-B3+T40E+P0rxLYE0uyr+hbjS1Qh5oa7DfQkZlsJeqe4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/gh/davidaprilio/laravel-api-daerah@1.0.4/resources/js/api-daerah.min.js" integrity="sha256-B3+T40E+P0rxLYE0uyr+hbjS1Qh5oa7DfQkZlsJeqe4=" crossorigin="anonymous"></script>
 
 ```
 
