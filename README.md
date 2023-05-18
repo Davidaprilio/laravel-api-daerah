@@ -30,6 +30,9 @@ Membuat data provinsi, kabupaten, kecamatan
 
 ```
 php artisan db:seed --class=DavidArl\ApiDaerah\Database\Seeders\DaerahSeeder
+
+// or on gitbash
+php artisan db:seed --class=DavidArl\\ApiDaerah\\Database\\Seeders\\DaerahSeeder
 ```
 
 ## API Endpoint

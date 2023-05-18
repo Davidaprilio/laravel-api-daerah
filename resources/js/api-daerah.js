@@ -8,7 +8,7 @@ class ApiDaerah {
     constructor(config = {}) {
         this.#option = {
             baseUrl: config.baseUrl || window.location.origin,
-            event: config.event || true,
+            event: config.event === false ? false : true,
             placeholder: config.placeholder === false ? false : true,
             supportSelectValue: config.supportSelectValue || false,
 
@@ -238,13 +238,17 @@ class ApiDaerah {
 
         if (this.#option.enabled.kabupaten) {
             const isEnabledKecamatan = this.#option.enabled.kecamatan
-            this.elProvinsi.addEventListener('change', function() {
+            function loadKabupaten() {
                 apiDaerah.makePlaceholder(apiDaerah.elKabupaten, 'Memuat Kabupaten')
                 apiDaerah.renderKabupaten()
                 if (isEnabledKecamatan) {
                     apiDaerah.makePlaceholder(apiDaerah.elKecamatan)
                 }
-            })
+            }
+
+            if ($) $(this.elProvinsi).on('change', loadKabupaten)
+            else this.elProvinsi.addEventListener('change', loadKabupaten)
+
             this.makePlaceholder(
                 this.getSelectKabupatenElement(),
                 this.#option.kabupaten.selected
@@ -252,10 +256,14 @@ class ApiDaerah {
         }
 
         if (this.#option.enabled.kecamatan) {
-            this.elKabupaten.addEventListener('change', function() {
+            function loadKecamatan() {
                 apiDaerah.makePlaceholder(apiDaerah.elKecamatan, 'Memuat Kecamatan')
-                apiDaerah.renderKecamatan()
-            })
+                apiDaerah.renderKecamatan()    
+            }
+            
+            if ($) $(this.elKabupaten).on('change', loadKecamatan)
+            else this.elKabupaten.addEventListener('change', loadKecamatan)
+
             this.makePlaceholder(
                 this.getSelectKecamatanElement(),
                 this.#option.kecamatan.selected
