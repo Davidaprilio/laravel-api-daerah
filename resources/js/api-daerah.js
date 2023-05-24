@@ -16,6 +16,7 @@ class ApiDaerah {
             idProvinsi: config.idProvinsi || 'provinsi-select', // sama dengan provinsi.id
             idKecamatan: config.idKecamatan || 'kecamatan-select', // sama dengan kecamatan.id
             idKabupaten: config.idKabupaten || 'kabupaten-select', // sama dengan kabupaten.id
+            idDesa: config.idDesa || 'desa-select', // sama dengan desa.id
 
             // config advanced nya
             provinsi: {
@@ -39,9 +40,17 @@ class ApiDaerah {
                 selected: config.kecamatan?.selected || null,
                 endpoint: config.kecamatan?.endpoint || '/api/kecamatan/:id',
             },
+            desa: {
+                id: config.desa?.id || null,
+                value: config.desa?.value || 'id',
+                text: config.desa?.text || 'name',
+                selected: config.desa?.selected || null,
+                endpoint: config.desa?.endpoint || '/api/desa/:id',
+            },
             enabled: {
                 kabupaten: config.enabled?.kabupaten === false ? false : true,
                 kecamatan: config.enabled?.kecamatan === false ? false : true,
+                desa: config.enabled?.desa || false,
             }
         }
         if (typeof this.#option.enabled.kabupaten != 'boolean') {
@@ -50,15 +59,20 @@ class ApiDaerah {
         if (typeof this.#option.enabled.kecamatan != 'boolean') {
             this.#option.enabled.kecamatan = config.idKecamatan !== false
         }
+        if (typeof this.#option.enabled.desa != 'boolean') {
+            this.#option.enabled.desa = config.idDesa !== false
+        }
         
         this.elProvinsi = document.getElementById(this.#option.provinsi.id || this.#option.idProvinsi);
         this.elKecamatan = document.getElementById(this.#option.kecamatan.id || this.#option.idKecamatan);
         this.elKabupaten = document.getElementById(this.#option.kabupaten.id || this.#option.idKabupaten);       
+        this.elDesa = document.getElementById(this.#option.desa.id || this.#option.idDesa);
         
         if (this.#option.supportSelectValue) {
             this.#option.provinsi.selected = this.#option.provinsi.selected || this.elProvinsi?.getAttribute('value') || null;
             this.#option.kecamatan.selected = this.#option.kecamatan.selected || this.elKecamatan?.getAttribute('value') || null;
             this.#option.kabupaten.selected = this.#option.kabupaten.selected || this.elKabupaten?.getAttribute('value') || null;
+            this.#option.desa.selected = this.#option.desa.selected || this.elDesa?.getAttribute('value') || null;
         }
 
         if (this.#option.event) {
@@ -83,6 +97,11 @@ class ApiDaerah {
     async getKecamatan(kabupatenID) {
         const listKecamatan = await this.#call(this.#option.kecamatan.endpoint.replace(':id', kabupatenID))
         return listKecamatan
+    }
+
+    async getDesa(kecamatanID) {
+        const listDesa = await this.#call(this.#option.desa.endpoint.replace(':id', kecamatanID))
+        return listDesa
     }
 
     async renderProvinsi(selected = null) {
@@ -128,6 +147,21 @@ class ApiDaerah {
         )
     }
 
+    async renderDesa(kecamatanID = null, selected = null) {
+        // ambil langsung nilai kabupaten jika null
+        kecamatanID = kecamatanID || this.getSelectedKecamatanID()
+        const listDesa = await this.getDesa(kecamatanID)
+        const elSelect = this.getSelectDesaElement()
+
+        this.#renderSelect(
+            elSelect, 
+            listDesa, 
+            this.#option.desa.text,
+            this.#option.desa.value, 
+            selected
+        )
+    }
+
     getSelectProvinsiElement() {
         return this.#checkExistElement('Provinsi')
     }
@@ -140,6 +174,10 @@ class ApiDaerah {
         return this.#checkExistElement('Kecamatan')
     }
 
+    getSelectDesaElement() {
+        return this.#checkExistElement('Desa')
+    }
+
     getSelectedProvinsiID() {
         return this.getSelectProvinsiElement().childNodes[this.elProvinsi.selectedIndex].dataset.id
     }
@@ -150,6 +188,10 @@ class ApiDaerah {
 
     getSelectedKabupatenID() {
         return this.getSelectKabupatenElement().childNodes[this.elKabupaten.selectedIndex].dataset.id
+    }
+
+    getSelectedDesaID() {
+        return this.getSelectDesaElement().childNodes[this.elDesa.selectedIndex].dataset.id
     }
 
     #checkExistElement(elementName) {
@@ -192,7 +234,7 @@ class ApiDaerah {
     #createOption(data, text, useValue = 'id') {
         const opt = document.createElement('option')
         opt.innerText = text
-        opt.dataset.id = data.id
+        opt.dataset.id = data[useValue]
         opt.value = data[useValue] || null
         return opt
     }
@@ -236,6 +278,13 @@ class ApiDaerah {
             this.#option.provinsi.selected
         )
 
+        let useJquery = false
+        try {
+            if ($) useJquery = true
+        } catch (error) {
+            useJquery = false
+        }
+
         if (this.#option.enabled.kabupaten) {
             const isEnabledKecamatan = this.#option.enabled.kecamatan
             function loadKabupaten() {
@@ -243,10 +292,13 @@ class ApiDaerah {
                 apiDaerah.renderKabupaten()
                 if (isEnabledKecamatan) {
                     apiDaerah.makePlaceholder(apiDaerah.elKecamatan)
+                    if (apiDaerah.#option.enabled.desa) {
+                        apiDaerah.makePlaceholder(apiDaerah.elDesa)
+                    }
                 }
             }
 
-            if ($) $(this.elProvinsi).on('change', loadKabupaten)
+            if (useJquery) $(this.elProvinsi).on('change', loadKabupaten)
             else this.elProvinsi.addEventListener('change', loadKabupaten)
 
             this.makePlaceholder(
@@ -259,14 +311,32 @@ class ApiDaerah {
             function loadKecamatan() {
                 apiDaerah.makePlaceholder(apiDaerah.elKecamatan, 'Memuat Kecamatan')
                 apiDaerah.renderKecamatan()    
+                if (apiDaerah.#option.enabled.desa) {
+                    apiDaerah.makePlaceholder(apiDaerah.elDesa)
+                }
             }
             
-            if ($) $(this.elKabupaten).on('change', loadKecamatan)
+            if (useJquery) $(this.elKabupaten).on('change', loadKecamatan)
             else this.elKabupaten.addEventListener('change', loadKecamatan)
 
             this.makePlaceholder(
                 this.getSelectKecamatanElement(),
                 this.#option.kecamatan.selected
+            )
+        }
+
+        if (this.#option.enabled.desa) {
+            function loadDesa() {
+                apiDaerah.makePlaceholder(apiDaerah.elDesa, 'Memuat Desa')
+                apiDaerah.renderDesa()
+            }
+
+            if (useJquery) $(this.elKecamatan).on('change', loadDesa)
+            else this.elKecamatan.addEventListener('change', loadDesa)
+
+            this.makePlaceholder(
+                this.getSelectDesaElement(),
+                this.#option.desa.selected
             )
         }
 
