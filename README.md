@@ -101,7 +101,7 @@ jangan lupa panggil script nya dulu.
 
 
 #### Basic Usage
-cukup sediakan element select dengan id default lalu panggil class `ApiDaerah()` maka akan langsung berfungsi
+Jika kamu menggunakan API bawaan, ini tidak ada konfigurasi apapun untuk menampilkan data. cukup sediakan element select dengan id default lalu panggil class `ApiDaerah()` maka akan langsung berfungsi
 ```html
 <select id="provinsi-select"></select>
 <select id="kabupaten-select"></select>
@@ -154,7 +154,7 @@ set value saat pertama render (on load):
  ```
 
 
-Masih ada lagi configurasinya? ada dong ini config lengkap nya dengan default value-nya juga
+Masih ada lagi configurasinya? ada dong ini config lengkap nya dengan default value-nya juga. 
 ```javascript
 new ApiDaerah({
 	baseUrl: window.location.origin, // base_url yang dari API
@@ -163,6 +163,9 @@ new ApiDaerah({
 	supportSelectValue: false, // jika diaktifkan akan mengambil attribute 'value' pada masing-masing select dan akan di atur sebagai nilai selected saat baru di load
 	provinsi:  {
 		id: null, // sama seperti 'idProvinsi' atau alias dari property 'idProvinsi'
+		// use custom identifier in attribute option "data-id=dataID" default follow value option ("id")
+		// to bahasa
+		dataID: null, // untuk menggunakan custom identifier di attribute option "data-id=dataID" default follow value option ("id")
 		value: 'id', // value pada option, bisa diisi apapun key name dari json api
 		text: 'name', // text pada option, bisa diisi apapun key name dari json api
 		selected: null, // alih-alih mengatur dari attribute value untuk memberikan opsi yang terseleksi kamu juga bisa mengatur nilai value dari sini
@@ -170,24 +173,38 @@ new ApiDaerah({
 	},
 	kabupaten:  {
 		id: null,
+		dataID: null,
 		value: 'id',
 		text: 'name',
 		selected: null,
-		endpoint: '/api/kabupaten/:id', // :id wajib diisi jika mau custom
+		endpoint: '/api/kabupaten/:provinsiID', // :provinsiID wajib diisi jika mau custom
 	},
 	kecamatan:  {
 		id: null,
+		dataID: null,
 		value: 'id',
 		text: 'name',
 		selected: null,
-		endpoint: '/api/kecamatan/:id',
+		endpoint: '/api/kecamatan/:kabupatenID',
+	},
+	desa:  {
+		id: null,
+		dataID: null,
+		value: 'id',
+		text: 'name',
+		selected: null,
+		endpoint: '/api/desa/:desaID', // sementar endpoint ini belum tersedia di API bawaan, jika butuh bisa pakai API di https://github.com/Davidaprilio/data-lokasi-indonesia ini memiliki data lengkap
 	},
 	enabled: {
 		kabupaten: true, // mematikan fungsi select saat di set ke false
-		kecamatan: true
+		kecamatan: true,
+		desa: false // jika ingin memakai perlu diaktifkan
 	}
 })
 ```
+Note: `dataID` ini digunakan untuk mengisi parameter di url endpoint jadi jika kamu mengganti `value` dengan nama dari provinsi misal, kamu juga harus mengatur `dataID` ke key id (nama key tergantung pada data source nya)
+
+Oh iya, client ApiDaerah ini juga dapat di aplikasikan dengan RestAPI lainnya, kamu dapat konsume api orang lain dengan mudah menggunakan bantuan ApiDaerah Client ini. Contoh penggunaan ApiDaerah Client menggunakan penyedia API lain bisa dilihat di [data-lokasi-indonesia](https://github.com/Davidaprilio/data-lokasi-indonesia)
 
 #### Method yang tersedia
 ```javascript
@@ -197,7 +214,7 @@ const apiDaerah = new ApiDaerah()
 apiDaerah.getProvinsi()
 apiDaerah.getKabupaten(provinsiID)
 apiDaerah.getKecamatan(kabupatenID)
-/* contoh data kabupaten
+/* contoh data source kabupaten
 [
 	{
 		id: 31, 
@@ -222,6 +239,15 @@ apiDaerah.getSelectKecamatanElement()
 apiDaerah.getSelectedProvinsiID()
 apiDaerah.getSelectedKecamatanID()
 apiDaerah.getSelectedKabupatenID()
+
+// mendapatkan id
+apiDaerah.getSelectedID()
+// {
+// 	provinsiID: '11',
+// 	kabupatenID: '1101',
+// 	kecamatanID: '1101022',
+// 	desaID: null // hanya muncul saat di enable 
+// }
 
 // mumbuat placholder option
 apiDaerah.makePlaceholder(elementSelect, customText = null, disabled = true)
