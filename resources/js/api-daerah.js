@@ -22,6 +22,7 @@ class ApiDaerah {
             // config advanced nya
             provinsi: {
                 id: config.provinsi?.id || null,
+                dataID: config.provinsi?.dataID || null, // use custom identifier in attribute option "data-id=dataID" default follow value option ("id")
                 value: config.provinsi?.value || 'id',
                 text: config.provinsi?.text || 'name',
                 selected: config.provinsi?.selected || null,
@@ -29,6 +30,7 @@ class ApiDaerah {
             },
             kabupaten: {
                 id: config.kabupaten?.id || null,
+                dataID: config.kabupaten?.dataID || null,
                 value: config.kabupaten?.value || 'id',
                 text: config.kabupaten?.text || 'name',
                 selected: config.kabupaten?.selected || null,
@@ -36,6 +38,7 @@ class ApiDaerah {
             },
             kecamatan: {
                 id: config.kecamatan?.id || null,
+                dataID: config.kecamatan?.dataID || null,
                 value: config.kecamatan?.value || 'id',
                 text: config.kecamatan?.text || 'name',
                 selected: config.kecamatan?.selected || null,
@@ -43,6 +46,7 @@ class ApiDaerah {
             },
             desa: {
                 id: config.desa?.id || null,
+                dataID: config.desa?.dataID || null,
                 value: config.desa?.value || 'id',
                 text: config.desa?.text || 'name',
                 selected: config.desa?.selected || null,
@@ -121,6 +125,7 @@ class ApiDaerah {
             listProvinsi, 
             this.#option.provinsi.text, 
             this.#option.provinsi.value, 
+            this.#option.provinsi.dataID, 
             selected
         )
     }
@@ -136,6 +141,7 @@ class ApiDaerah {
             listKabupaten, 
             this.#option.kabupaten.text,
             this.#option.kabupaten.value, 
+            this.#option.kabupaten.dataID, 
             selected
         )
     }
@@ -151,6 +157,7 @@ class ApiDaerah {
             listKecamatan, 
             this.#option.kecamatan.text,
             this.#option.kecamatan.value, 
+            this.#option.kecamatan.dataID, 
             selected
         )
     }
@@ -166,6 +173,7 @@ class ApiDaerah {
             listDesa, 
             this.#option.desa.text,
             this.#option.desa.value, 
+            this.#option.desa.dataID, 
             selected
         )
     }
@@ -223,12 +231,12 @@ class ApiDaerah {
         }
     }
 
-    #renderSelect(elSelect, dataList, text = 'name', useValue = 'id', selected = null) {
+    #renderSelect(elSelect, dataList, text = 'name', useValue = 'id', useDataID = null, selected = null) {
         elSelect.innerHTML = ''
         this.makePlaceholder(elSelect)
         
         dataList.forEach(data => {
-            const opt = this.#createOption(data, text, useValue)
+            const opt = this.#createOption(data, text, useValue, useDataID)
             elSelect.appendChild(opt)
         })
         if (selected !== null) {
@@ -248,10 +256,10 @@ class ApiDaerah {
         }
     }
 
-    #createOption(data, useText = 'name', useValue = 'id') {
+    #createOption(data, useText = 'name', useValue = 'id', useDataID = null) {
         const opt = document.createElement('option')
         opt.innerText = this.#objectGetValue(data, useText)
-        opt.dataset.id = this.#objectGetValue(data, useValue)
+        opt.dataset.id = this.#objectGetValue(data, useDataID || useValue)
         opt.value = this.#objectGetValue(data, useValue)
         return opt
     }
