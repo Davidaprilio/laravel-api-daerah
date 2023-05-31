@@ -3,6 +3,7 @@ class ApiDaerah {
     elProvinsi
     elKecamatan
     elKabupaten
+    elDesa
 
     // Berikan Aku Sebuah ID, Kan Ku Buat Select Mu Berfungsi
     constructor(config = {}) {
@@ -31,27 +32,28 @@ class ApiDaerah {
                 value: config.kabupaten?.value || 'id',
                 text: config.kabupaten?.text || 'name',
                 selected: config.kabupaten?.selected || null,
-                endpoint: config.kabupaten?.endpoint || '/api/kabupaten/:id',
+                endpoint: config.kabupaten?.endpoint || '/api/kabupaten/:provinsiID',
             },
             kecamatan: {
                 id: config.kecamatan?.id || null,
                 value: config.kecamatan?.value || 'id',
                 text: config.kecamatan?.text || 'name',
                 selected: config.kecamatan?.selected || null,
-                endpoint: config.kecamatan?.endpoint || '/api/kecamatan/:id',
+                endpoint: config.kecamatan?.endpoint || '/api/kecamatan/:kabupatenID',
             },
             desa: {
                 id: config.desa?.id || null,
                 value: config.desa?.value || 'id',
                 text: config.desa?.text || 'name',
                 selected: config.desa?.selected || null,
-                endpoint: config.desa?.endpoint || '/api/desa/:id',
+                endpoint: config.desa?.endpoint || '/api/desa/:kecamatanID',
             },
             enabled: {
                 kabupaten: config.enabled?.kabupaten === false ? false : true,
                 kecamatan: config.enabled?.kecamatan === false ? false : true,
                 desa: config.enabled?.desa || false,
-            }
+            },
+            useJquery: false
         }
         if (typeof this.#option.enabled.kabupaten != 'boolean') {
             this.#option.enabled.kabupaten = config.idKabupaten !== false
@@ -62,7 +64,7 @@ class ApiDaerah {
         if (typeof this.#option.enabled.desa != 'boolean') {
             this.#option.enabled.desa = config.idDesa !== false
         }
-        
+
         this.elProvinsi = document.getElementById(this.#option.provinsi.id || this.#option.idProvinsi);
         this.elKecamatan = document.getElementById(this.#option.kecamatan.id || this.#option.idKecamatan);
         this.elKabupaten = document.getElementById(this.#option.kabupaten.id || this.#option.idKabupaten);       
@@ -73,6 +75,12 @@ class ApiDaerah {
             this.#option.kecamatan.selected = this.#option.kecamatan.selected || this.elKecamatan?.getAttribute('value') || null;
             this.#option.kabupaten.selected = this.#option.kabupaten.selected || this.elKabupaten?.getAttribute('value') || null;
             this.#option.desa.selected = this.#option.desa.selected || this.elDesa?.getAttribute('value') || null;
+        }
+        
+        try {
+            if ($) this.#option.useJquery = true
+        } catch (error) {
+            this.#option.useJquery = false
         }
 
         if (this.#option.event) {
@@ -90,17 +98,17 @@ class ApiDaerah {
     }
 
     async getKabupaten(provinsiID) {
-        const listKabupaten = await this.#call(this.#option.kabupaten.endpoint.replace(':id', provinsiID))
+        const listKabupaten = await this.#call(this.#option.kabupaten.endpoint, {provinsiID})
         return listKabupaten
     }
 
     async getKecamatan(kabupatenID) {
-        const listKecamatan = await this.#call(this.#option.kecamatan.endpoint.replace(':id', kabupatenID))
+        const listKecamatan = await this.#call(this.#option.kecamatan.endpoint, {kabupatenID})
         return listKecamatan
     }
 
     async getDesa(kecamatanID) {
-        const listDesa = await this.#call(this.#option.desa.endpoint.replace(':id', kecamatanID))
+        const listDesa = await this.#call(this.#option.desa.endpoint, {kecamatanID})
         return listDesa
     }
 
@@ -206,12 +214,21 @@ class ApiDaerah {
         return this[`el${elementName}`]
     }
 
+    getSelectedID() {
+        return {
+            provinsiID: this.getSelectedProvinsiID(),
+            kabupatenID: this.#option.enabled.kabupaten ? this.getSelectedKabupatenID() : null,
+            kecamatanID: this.#option.enabled.kecamatan ? this.getSelectedKecamatanID() : null,
+            desaID: this.#option.enabled.desa ? this.getSelectedDesaID() : null 
+        }
+    }
+
     #renderSelect(elSelect, dataList, text = 'name', useValue = 'id', selected = null) {
         elSelect.innerHTML = ''
         this.makePlaceholder(elSelect)
         
         dataList.forEach(data => {
-            const opt = this.#createOption(data, data[text], useValue)
+            const opt = this.#createOption(data, text, useValue)
             elSelect.appendChild(opt)
         })
         if (selected !== null) {
@@ -231,15 +248,27 @@ class ApiDaerah {
         }
     }
 
-    #createOption(data, text, useValue = 'id') {
+    #createOption(data, useText = 'name', useValue = 'id') {
         const opt = document.createElement('option')
-        opt.innerText = text
-        opt.dataset.id = data[useValue]
-        opt.value = data[useValue] || null
+        opt.innerText = this.#objectGetValue(data, useText)
+        opt.dataset.id = this.#objectGetValue(data, useValue)
+        opt.value = this.#objectGetValue(data, useValue)
         return opt
     }
 
-    async #call(path) {
+    #objectGetValue(data, path) {
+        try {
+            return path.split('.').reduce((prev, curr) => prev[curr], data)
+        } catch (error) {
+            console.error(`Invalid key path '${path}'`, data)
+        }
+    }
+
+    async #call(path, params = {}) {
+        params = {...this.getSelectedID(), ...params}
+        // replace param in path with value from params
+        path = Object.entries(params).reduce((str, [k,v]) => str.replaceAll(`:${k}`, v), path)
+
         const response = await fetch(this.#getUrl(path))
         const json = await response.json()
         return json
@@ -269,6 +298,11 @@ class ApiDaerah {
             await this.renderKecamatan(null, this.#option.kecamatan.selected)
         }
     }
+    
+    #eventChange(element, callback) {
+        if (this.#option.useJquery) $(element).on('change', callback)
+        else element.addEventListener('change', callback)
+    }
 
     async #runEventSelect() {
         // create Event dan membuat placeholder awal
@@ -276,18 +310,12 @@ class ApiDaerah {
         this.makePlaceholder(
             this.getSelectProvinsiElement(),
             this.#option.provinsi.selected
-        )
-
-        let useJquery = false
-        try {
-            if ($) useJquery = true
-        } catch (error) {
-            useJquery = false
-        }
+        )        
 
         if (this.#option.enabled.kabupaten) {
             const isEnabledKecamatan = this.#option.enabled.kecamatan
-            function loadKabupaten() {
+
+            this.#eventChange(this.elProvinsi, () => {
                 apiDaerah.makePlaceholder(apiDaerah.elKabupaten, 'Memuat Kabupaten')
                 apiDaerah.renderKabupaten()
                 if (isEnabledKecamatan) {
@@ -296,10 +324,7 @@ class ApiDaerah {
                         apiDaerah.makePlaceholder(apiDaerah.elDesa)
                     }
                 }
-            }
-
-            if (useJquery) $(this.elProvinsi).on('change', loadKabupaten)
-            else this.elProvinsi.addEventListener('change', loadKabupaten)
+            })
 
             this.makePlaceholder(
                 this.getSelectKabupatenElement(),
@@ -308,16 +333,13 @@ class ApiDaerah {
         }
 
         if (this.#option.enabled.kecamatan) {
-            function loadKecamatan() {
+            this.#eventChange(this.elKabupaten, () => {
                 apiDaerah.makePlaceholder(apiDaerah.elKecamatan, 'Memuat Kecamatan')
                 apiDaerah.renderKecamatan()    
                 if (apiDaerah.#option.enabled.desa) {
                     apiDaerah.makePlaceholder(apiDaerah.elDesa)
                 }
-            }
-            
-            if (useJquery) $(this.elKabupaten).on('change', loadKecamatan)
-            else this.elKabupaten.addEventListener('change', loadKecamatan)
+            })
 
             this.makePlaceholder(
                 this.getSelectKecamatanElement(),
@@ -326,13 +348,10 @@ class ApiDaerah {
         }
 
         if (this.#option.enabled.desa) {
-            function loadDesa() {
+            this.#eventChange(this.elKecamatan, () => {
                 apiDaerah.makePlaceholder(apiDaerah.elDesa, 'Memuat Desa')
                 apiDaerah.renderDesa()
-            }
-
-            if (useJquery) $(this.elKecamatan).on('change', loadDesa)
-            else this.elKecamatan.addEventListener('change', loadDesa)
+            })
 
             this.makePlaceholder(
                 this.getSelectDesaElement(),

@@ -7,6 +7,7 @@ use DavidArl\ApiDaerah\Models\Kabupaten;
 use DavidArl\ApiDaerah\Models\Kecamatan;
 use DavidArl\ApiDaerah\Models\Provinsi;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class DaerahController extends Controller
 {
@@ -17,30 +18,37 @@ class DaerahController extends Controller
 
     public function kabupaten(Request $request)
     {
-        // return Kabupaten::where('province_id', $request->province_id)->get();
-        if ($request->provinsi_id) {
-            $data = Kabupaten::where('provinsi_id', $request->provinsi_id)->get();
-            if ($request->type == 'option') {
-                return $this->_createOption($data, 'id', 'full_name');
-            } else {
-                return $data;
-            }
+        $provinsi = Provinsi::find($request->provinsi_id);
+        if($provinsi === null) {
+            return response()->json([
+                'message' => "Provinsi tidak ditemukan",
+                'query' => $request->all()
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = Kabupaten::where('provinsi_id', $provinsi->id)->get();
+        if ($request->type == 'option') {
+            return $this->_createOption($data, 'id', 'full_name');
         } else {
-            return Kabupaten::all();
+            return $data;
         }
     }
 
     public function kecamatan(Request $request)
     {
-        if ($request->kabupaten_id) {
-            $data = Kecamatan::where('kabupaten_id', $request->kabupaten_id)->get();
-            if ($request->type == 'option') {
-                return $this->_createOption($data, 'id', 'name');
-            } else {
-                return $data;
-            }
+        $kabupaten = Kabupaten::find($request->kabupaten_id);
+        if($kabupaten === null) {
+            return response()->json([
+                'message' => "Kabupaten tidak ditemukan",
+                'query' => $request->all()
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = Kecamatan::where('kabupaten_id', $kabupaten->id)->get();
+        if ($request->type == 'option') {
+            return $this->_createOption($data, 'id', 'name');
         } else {
-            return Kecamatan::all();
+            return $data;
         }
     }
 
